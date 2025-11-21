@@ -299,6 +299,14 @@
         color: var(--accent);
       }
 
+      /* music button specific */
+      #playMusicBtn {
+        font-size: 16px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+      }
+
       /* reveal */
       .reveal {
         opacity: 0;
@@ -452,7 +460,17 @@
       <button id="fab-loc">📍 Lokasi</button>
       <button id="fab-rsvp" class="accent">✉ RSVP</button>
       <button id="fab-share">🔗 Share</button>
+      <!-- Music control button -->
+      <button id="playMusicBtn" title="Play / Pause Music">🔈</button>
     </div>
+
+    <!-- AUDIO: file berada di root repo, nama sesuai yang ada di GitHub -->
+    <audio
+      id="bg-music"
+      src="waktu-yang-tepat-yesus.mp3"
+      preload="metadata"
+      loop
+    ></audio>
 
     <script>
       /* ==========================
@@ -706,6 +724,55 @@ Catatan: ${t}`;
           }
         }
       };
+
+      /* ==========================
+   Music control
+   ========================== */
+      (function initMusic() {
+        const audio = document.getElementById("bg-music");
+        const btn = document.getElementById("playMusicBtn");
+
+        // set initial icon based on audio state
+        const updateIcon = () => {
+          btn.textContent = audio && !audio.paused ? "🔊" : "🔈";
+        };
+        updateIcon();
+
+        // toggle play/pause when button clicked
+        btn.addEventListener("click", async () => {
+          try {
+            if (audio.paused) {
+              await audio.play();
+              btn.textContent = "🔊";
+            } else {
+              audio.pause();
+              btn.textContent = "🔈";
+            }
+          } catch (err) {
+            // play may fail if browser blocks it — user can try again
+            console.warn("Play failed:", err);
+            alert("Klik lagi untuk memutar musik.");
+          }
+        });
+
+        // try to play once on first user interaction (helps in some browsers)
+        const tryPlayOnFirstGesture = async () => {
+          document.removeEventListener("click", tryPlayOnFirstGesture);
+          try {
+            await audio.play();
+            btn.textContent = "🔊";
+          } catch (e) {
+            // ignore — user can manually press button
+          }
+        };
+        document.addEventListener("click", tryPlayOnFirstGesture, {
+          once: true,
+        });
+
+        // update icon when playback ends/starts
+        audio.addEventListener("play", updateIcon);
+        audio.addEventListener("pause", updateIcon);
+      })();
 
       /* ==========================
    Reveal
